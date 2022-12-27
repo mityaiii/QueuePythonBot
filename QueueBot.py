@@ -14,20 +14,29 @@ cb = CallbackData('post', 'msg_text')
 groups = {}
 
 '''
+План
+
 Необходимо протестировать все реализованные команды.
-Переработать логику работы с root (добавить в поле класса Group, запретить удаление чужой группы)
+Необходимо научиться загружать в json, используя .json
+Переработать логику работы с root (добавить в поле класса Group, запретить удаление чужой группы) +
 Доработать остальные команды
+Разработать логики нажатия клавиш
+
 '''
 
+def get_list_without_command(message: types.Message) -> list:
+    text_from_message = message.text.split()
+    list_without_command = text_from_message[1 : len(text_from_message)]
+    return list_without_command
+
 async def set_commands_in_menu(my_commands) -> None:
+
     list_of_my_commands = [types.BotCommand(command[0], command[1]) for command in my_commands.items()]
-    print(list_of_my_commands)
     await dp.bot.set_my_commands(list_of_my_commands)    
 
 @dp.message_handler(commands=['give_root'])
 async def give_root_with_command(message: types.Message) -> None:
-    text_from_message = message.text.split()
-    groups[Group.cur_group].people_with_roots = [text_from_message[i] for i in range(1, len(text_from_message))]
+    groups[Group.cur_group].people_with_roots = await get_list_without_command(message=message)
 
 
 def add_button_back_to_menu(buttons) -> list:
@@ -56,11 +65,10 @@ async def set_root_commands() -> dict:
         "del_list_of_group": "Удалить список участников",
         "del_list_of_subject": "Удалить список предметов"
     }
-
     return my_commands
 
 async def set_god_root_commands() -> dict:
-    my_commands = set_root_commands
+    my_commands = await set_root_commands()
     my_commands["add_group"] = "Добавить группу"
     my_commands["give_root"] = "Выдать пользователю root права"
     my_commands["del_group"] = "Удалить группу"
@@ -71,12 +79,12 @@ async def set_god_root_commands() -> dict:
 async def help_handler(message: types.Message) -> None:
     my_commands = None
     if Group.cur_group != None and message.from_user.id in groups[Group.cur_group].people_with_root:
-        await set_root_commands()
+        my_commands = await set_root_commands()
     elif message.from_user.id in root_id:
-        await set_god_root_commands(my_commands=my_commands)
+        my_commands = await set_god_root_commands()
 
-    if my_commands is None:
-        set_commands_in_menu(my_commands=my_commands)
+    if not(my_commands is None):
+        await set_commands_in_menu(my_commands=my_commands)
 
     url_of_git_rep = 'https://github.com/mityaiii/QueuePythonBot.git'
     text = (
@@ -110,8 +118,7 @@ def add_groups(name_of_groups) -> None:
 
 @dp.message_handler(commands=['add_group'])
 async def add_group_with_command(message: types.Message) -> None:
-    text_from_message = message.text.split() 
-    name_of_groups = [text_from_message[i] for i in range(1, len(text_from_message))]
+    name_of_groups = await get_list_without_command(message=message)
     text = None
 
     if name_of_groups == None:
@@ -147,10 +154,9 @@ def add_list_of_subjects(name_of_subjects):
 
 @dp.message_handler(commands=['add_list_of_subject'])
 async def add_list_of_subject_with_command(message: types.Message) -> None:
-    text_from_message = message.text.split()
+    name_of_subjects = await get_list_without_command(message=message)
+
     text = None
-    name_of_subjects = [text_from_message[i] for i in range(1, len(text_from_message))]
-    
     if name_of_subjects == None:
         text = 'Вы не указали предмет, который необходимо добавить'
     else:
@@ -162,20 +168,17 @@ async def add_list_of_subject_with_command(message: types.Message) -> None:
 
 @dp.message_handler(commands=['del_list_of_group'])
 async def del_group_with_command(message: types.Message):
-    names_of_group = [name_of_group for name_of_group in message.text.split()]
+    names_of_group = await get_list_without_command(message=message)
     for name_of_group in names_of_group:
         groups.pop(name_of_group)
 
 @dp.message_handler(commands=['del_list_of_subject'])
 async def del_list_of_subject_with_command(message: types.Message):
-    text_of_message = message.text.split()
-    groups[Group.cur_group].remove_list_of_subjects([name_of_subject for name_of_subject in range(1, len(text_of_message) - 1)])
+    groups[Group.cur_group].remove_list_of_subjects(await get_list_without_command(message=message))
     
 @dp.message_handler(commands=['del_list_person_with_root'])
 async def del_root(message: types.Message):
-    text_from_message = message.text.split()
-    names_of_person = [name_of_person for name_of_person in text_from_message]
-    groups[Group.cur_group].remove_list_of_subjects(names_of_person)
+    groups[Group.cur_group].remove_list_of_subjects(await get_list_without_command(message=message))
 
 @dp.message_handler(content_types=['text'])
 async def handler_for_text(message: types.Message) -> None:
@@ -199,6 +202,6 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
-    print(groups)
-    print(Group.cur_group)
-    print(groups[Group.cur_group].get_subjects().keys())
+    # print(groups)
+    # print(Group.cur_group)
+    # print(groups[Group.cur_group].get_subjects().keys())

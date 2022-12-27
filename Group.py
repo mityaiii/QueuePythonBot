@@ -3,7 +3,7 @@ cur_group = None
 class Group:
     __people_with_roots = None
 
-    class __Person:
+    class Person:
         name_of_person = None
         id = None
         root_mode = False
@@ -12,13 +12,13 @@ class Group:
             self.name_of_person = name_of_person
             self.id = id
 
-    class __Subject:
-        number_of_people_in_group = None
+    class Subject:
         cur_queue = []
         def __init__(self, number_of_people_in_group) -> None:
             self.number_of_people_in_group = number_of_people_in_group
             self.cur_queue = [0] * number_of_people_in_group
     
+    subjects = None
     __subjects = {}
     __number_of_people_in_group = 0
 
@@ -40,31 +40,31 @@ class Group:
 
     def add_subjects(self, name_of_subjects) -> None:
         for name_of_subject in name_of_subjects:        
-            subject = self.__Subject(self.__number_of_people_in_group)
+            subject = self.Subject(self.__number_of_people_in_group)
             self.__subjects[name_of_subject] = subject
 
     def get_subjects(self) -> dict:
         return self.__subjects
 
-    def get_queue_from_subjec(self, name_of_subject) -> list:
+    def get_queue_from_subject(self, name_of_subject) -> list:
         return self.__subjects[name_of_subject].cur_queue
 
     def add_person_in_queue(self, name_of_person, id, name_of_subjects, index) -> None:
-        person = self.__Person(name_of_person, id)
+        person = self.Person(name_of_person, id)
         self.__subjects[name_of_subjects].cur_queue[index] = person
 
     def get_dist_of_subjects(self) -> dict:
         return self.__subjects
     
-    def get_info_about_person_by_index(self, name_of_subjects, index_of_person):
+    def get_info_about_person_by_index(self, name_of_subjects, index_of_person) -> Person:
         return self.__subjects[name_of_subjects].cur_queue[index_of_person]
     
-    def get_info_about_person_by_name(self, name_of_subjects, name_of_person):
+    def get_info_about_person_by_name(self, name_of_subjects, name_of_person) -> Person:
         return self.__subjects[name_of_subjects].cur_queue.find(name_of_person)
 
     def remove_list_of_subjects(self, names_of_subject):
         for name_of_subject in names_of_subject:
             self.__subjects.remove(name_of_subject)
     
-    def is_subject_exist(self, name_of_subject):
+    def is_subject_exist(self, name_of_subject) -> bool:
         return name_of_subject in self.__subjects
