@@ -1,1 +1,1 @@
-    text = None
+add_list_of_s

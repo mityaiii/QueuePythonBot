@@ -1,12 +1,8 @@
-def main() -> None:
-    s = """
-    1
-    2
-    3
-    4
-    5
-    """
-    print(s.split())
+import Group
 
+def main() -> None:
+    a = ['1', '2', '3']
+    a.remove('1')
+    print(a)
 if __name__ == '__main__':
     main()
