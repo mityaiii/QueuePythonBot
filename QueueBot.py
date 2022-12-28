@@ -1,5 +1,6 @@
 import Group
 import FileManager
+import for_test
 
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.utils.callback_data import CallbackData
@@ -12,6 +13,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
 cb = CallbackData('post', 'msg_text')
 groups = {}
+QUANTITY_OF_BUTTONS_IN_ROW = 5
 
 '''
 План
@@ -30,7 +32,6 @@ def get_list_without_command(message: types.Message) -> list:
     return list_without_command
 
 async def set_commands_in_menu(my_commands) -> None:
-
     list_of_my_commands = [types.BotCommand(command[0], command[1]) for command in my_commands.items()]
     await dp.bot.set_my_commands(list_of_my_commands)    
 
@@ -38,9 +39,48 @@ async def set_commands_in_menu(my_commands) -> None:
 async def give_root_with_command(message: types.Message) -> None:
     groups[Group.cur_group].people_with_roots = await get_list_without_command(message=message)
 
-
 def add_button_back_to_menu(buttons) -> list:
-    return buttons.append(types.KeyboardButton('Вернуться в главное меню'))
+    buttons.append(types.InlineKeyboardButton(text='Вернуться в главное меню', callback_data=cb.new(msg_text='Вернуться в главное меню')))
+    return buttons
+
+def set_subjects_on_button(list_of_subjects) -> list:
+    buttons_with_subjects = [types.InlineKeyboardButton(text=name_of_subject, callback_data=cb.new(msg_text=name_of_subject)) for name_of_subject in list_of_subjects]
+    add_button_back_to_menu(buttons=buttons_with_subjects)
+    return buttons_with_subjects
+
+@dp.callback_query_handler(cb.filter())
+async def pressed_button(call: types.CallbackQuery, callback_data: dict) -> None:
+    await call.answer()
+    print(callback_data['msg_text'])
+
+    if callback_data['msg_text'] in ['Алгоритмы']:
+        text_with_subject = '123'
+        buttons = []    
+        markup_with_queue = types.InlineKeyboardMarkup(row_width=QUANTITY_OF_BUTTONS_IN_ROW)
+
+        for i in range(groups[Group.cur_group].number_of_people_in_group):
+                buttons.append(types.InlineKeyboardButton(text=f'{i + 1}✅', callback_data=cb.new(msg_text=i + 1)))
+        markup_with_queue.add(*buttons)
+
+        await bot.send_message(chat_id=call.from_user.id, text=text_with_subject, reply_markup=markup_with_queue)
+
+    elif callback_data['msg_text'].isdigit() and 1 <= int(callback_data['msg_text']) <= groups[Group.cur_group].number_of_people_in_group: 
+        number_of_button = int(callback_data['msg_text']) - 1
+        print(number_of_button)
+        print(groups[Group.cur_group].number_of_people_in_group)
+        groups[Group.cur_group].add_person_in_queue(name_of_person=call.from_user.first_name,
+                                                    id=call.id,
+                                                    name_of_subjects='Алгоритмы',
+                                                    index=number_of_button)
+        new_markup = call.message.reply_markup
+        new_markup.inline_keyboard[number_of_button // QUANTITY_OF_BUTTONS_IN_ROW][number_of_button % QUANTITY_OF_BUTTONS_IN_ROW].text = f'{number_of_button + 1}❌'
+        
+        await bot.edit_message_reply_markup(chat_id=call.from_user.id,
+                                            message_id=call.message.message_id,
+                                            reply_markup=new_markup)                                            
+
+    elif callback_data['msg_text'] == 'Вернуться в главное меню':
+        pass
 
 @dp.message_handler(commands=['start', 'back_to_main'])
 async def start_handler(message: types.Message) -> None:
@@ -72,13 +112,12 @@ async def set_god_root_commands() -> dict:
     my_commands["add_group"] = "Добавить группу"
     my_commands["give_root"] = "Выдать пользователю root права"
     my_commands["del_group"] = "Удалить группу"
-
     return my_commands
 
 @dp.message_handler(commands=['help'])
 async def help_handler(message: types.Message) -> None:
     my_commands = None
-    if Group.cur_group != None and message.from_user.id in groups[Group.cur_group].people_with_root:
+    if Group.cur_group != None and message.from_user.id in groups[Group.cur_group].people_with_roots:
         my_commands = await set_root_commands()
     elif message.from_user.id in root_id:
         my_commands = await set_god_root_commands()
@@ -184,12 +223,10 @@ async def del_root(message: types.Message):
 async def handler_for_text(message: types.Message) -> None:
     if message.text == 'Вернуться в главное меню':
         await start_handler(message=message)
-    elif message.text in ['subject']:
-        pass
     elif message.text == 'Записаться в очередь':
         buttons = []
-        add_button_back_to_menu(buttons=buttons)
-        markup_with_subject = types.ReplyKeyboardMarkup()
+        buttons = set_subjects_on_button(list_of_subjects=groups[Group.cur_group].get_subjects())
+        markup_with_subject = types.InlineKeyboardMarkup(row_width=1)
         markup_with_subject.add(*buttons)
         await bot.send_message(chat_id=message.from_user.id, text='Выберите предмет', reply_markup=markup_with_subject)
     elif message.text == 'Помощь':
@@ -198,6 +235,8 @@ async def handler_for_text(message: types.Message) -> None:
         await bot.send_message(chat_id=message.from_user.id, text='Я не знаю такой команды.')
 
 def main() -> None:
+    global groups
+    groups = for_test.how_use_programm()
     executor.start_polling(dp)
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ import Group
 import FileManager
 import json
 
-def how_use_programm() -> None:
+def how_use_programm() -> dict:
     groups = {}
     # Выбрать группу для изменения
     Group.cur_group = '05'
@@ -25,21 +25,12 @@ def how_use_programm() -> None:
     groups[Group.cur_group].add_person_in_queue(name, id, name_of_subjects, index)
 
     # Получение информация из класса Group
-    # group.subjects['1'] = 1
-    js = json.dumps(groups[Group.cur_group].__dict__)
-    print(groups.__getattr__)
-    print()
-    # print(js)
     # print(groups[Group.cur_group].__dict__)
     # print(groups[Group.cur_group].get_subjects())
     # print(groups[Group.cur_group].people_with_roots)
     # print(groups[Group.cur_group].get_info_about_person_by_index('Алгоритмы', 1).name_of_person)
 
-    # Подгрузка в FileManager
-    # like_database = FileManager.FileManager()
-    # like_database.open_file('list_of_group/info_about_queue.json')
-    # like_database.load_info_to_file(groups.__dict__)
-    # print(like_database.get_dict_from_file())
+    return groups
 
 def how_load_to_database():
     d = {'own' : 1, 'two' : 2}
