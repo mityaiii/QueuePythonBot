@@ -1,1 +1,1 @@
-    print(groups) 
+groups[name] = group

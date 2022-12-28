@@ -30,6 +30,8 @@ def how_use_programm() -> dict:
     # print(groups[Group.cur_group].people_with_roots)
     # print(groups[Group.cur_group].get_info_about_person_by_index('Алгоритмы', 1).name_of_person)
 
+    print(type(groups[Group.cur_group]))
+
     return groups
 
 def how_load_to_database():

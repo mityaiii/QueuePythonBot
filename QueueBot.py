@@ -37,7 +37,7 @@ async def set_commands_in_menu(my_commands) -> None:
 
 @dp.message_handler(commands=['give_root'])
 async def give_root_with_command(message: types.Message) -> None:
-    groups[Group.cur_group].people_with_roots = await get_list_without_command(message=message)
+    groups[Group.cur_group].people_with_roots = get_list_without_command(message=message)
 
 def add_button_back_to_menu(buttons) -> list:
     buttons.append(types.InlineKeyboardButton(text='Вернуться в главное меню', callback_data=cb.new(msg_text='Вернуться в главное меню')))
@@ -153,11 +153,12 @@ async def choose_group_for_settings(message: types.Message) -> None:
 
 def add_groups(name_of_groups) -> None:
     for name in name_of_groups:
-        groups[name] = Group.Group()
+        group = Group.Group()
+        groups[name] = group
 
 @dp.message_handler(commands=['add_group'])
 async def add_group_with_command(message: types.Message) -> None:
-    name_of_groups = await get_list_without_command(message=message)
+    name_of_groups = get_list_without_command(message=message)
     text = None
 
     if name_of_groups == None:
@@ -173,7 +174,6 @@ async def add_group_with_command(message: types.Message) -> None:
         for i in name_of_groups:
             text += ', ' + i
         text += ' были добавлены' 
-
     await bot.send_message(chat_id=message.from_user.id, text=text)
 
 @dp.message_handler(commands=['set_quantity_of_people'])
@@ -188,12 +188,14 @@ async def set_of_quantity_of_people(message: types.Message):
         text = 'Введите целое число'
     await bot.send_message(chat_id=message.from_user.id, text=text)
 
+    print(type(groups[Group.cur_group]))
+
 def add_list_of_subjects(name_of_subjects):
     groups[Group.cur_group].add_subject(name_of_subjects)
 
 @dp.message_handler(commands=['add_list_of_subject'])
 async def add_list_of_subject_with_command(message: types.Message) -> None:
-    name_of_subjects = await get_list_without_command(message=message)
+    name_of_subjects = get_list_without_command(message=message)
 
     text = None
     if name_of_subjects == None:
@@ -207,17 +209,17 @@ async def add_list_of_subject_with_command(message: types.Message) -> None:
 
 @dp.message_handler(commands=['del_list_of_group'])
 async def del_group_with_command(message: types.Message):
-    names_of_group = await get_list_without_command(message=message)
+    names_of_group = get_list_without_command(message=message)
     for name_of_group in names_of_group:
         groups.pop(name_of_group)
 
 @dp.message_handler(commands=['del_list_of_subject'])
 async def del_list_of_subject_with_command(message: types.Message):
-    groups[Group.cur_group].remove_list_of_subjects(await get_list_without_command(message=message))
+    groups[Group.cur_group].remove_list_of_subjects(get_list_without_command(message=message))
     
 @dp.message_handler(commands=['del_list_person_with_root'])
 async def del_root(message: types.Message):
-    groups[Group.cur_group].remove_list_of_subjects(await get_list_without_command(message=message))
+    groups[Group.cur_group].remove_list_of_subjects(get_list_without_command(message=message))
 
 @dp.message_handler(content_types=['text'])
 async def handler_for_text(message: types.Message) -> None:
@@ -236,11 +238,14 @@ async def handler_for_text(message: types.Message) -> None:
 
 def main() -> None:
     global groups
-    groups = for_test.how_use_programm()
+    # groups = for_test.how_use_programm()
     executor.start_polling(dp)
+    # print(groups[Group.cur_group].__dict__)
+    print(type(groups[Group.cur_group]))
+    print(groups[Group.cur_group].get_subjects())
+    print(groups[Group.cur_group].people_with_roots)
+    print(groups[Group.cur_group].get_info_about_person_by_index('Алгоритмы', 1).name_of_person)
+    
 
 if __name__ == '__main__':
     main()
-    # print(groups)
-    # print(Group.cur_group)
-    # print(groups[Group.cur_group].get_subjects().keys())
