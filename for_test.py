@@ -10,7 +10,7 @@ def how_use_programm() -> dict:
     group = Group.Group()
     groups[Group.cur_group] = group
     # Количество людей в группе 
-    groups[Group.cur_group].number_of_people_in_group = 30
+    groups[Group.cur_group].quantity_of_people_in_group = 30
     # Задание предметов
     subjects = ['Основы программирования', 'Алгоритмы']
     groups[Group.cur_group].add_subjects(subjects)
@@ -22,28 +22,28 @@ def how_use_programm() -> dict:
     id = 123
     name_of_subjects = 'Алгоритмы'
     index = 1
-    groups[Group.cur_group].add_person_in_queue(name, id, name_of_subjects, index)
+    groups[Group.cur_group].add_person_to_queue(name, id, name_of_subjects, index)
 
     # Получение информация из класса Group
-    # print(groups[Group.cur_group].__dict__)
-    # print(groups[Group.cur_group].get_subjects())
-    # print(groups[Group.cur_group].people_with_roots)
-    # print(groups[Group.cur_group].get_info_about_person_by_index('Алгоритмы', 1).name_of_person)
-
-    print(type(groups[Group.cur_group]))
+    groups[Group.cur_group].get_info_about_group()
 
     return groups
 
 def how_load_to_database():
-    d = {'own' : 1, 'two' : 2}
-    file = open('list_of_group/info_about_queue.json', 'r+')
-    json.dump(d, file, indent=3)    
-    # file = FileManager.FileManager()
-    # file.open_file('list_of_group/info_about_queue.json', 'w')
-    pass
+    data = {}
+    file = open('channel_users.json', 'r+', encoding='utf-8')
+    data = json.load(file)
+    print(data)
+
+def test(d):
+    print(id(d))
+
 def main():
-    how_use_programm()
+    # how_use_programm()
     # how_load_to_database()
+    a = {}
+    print(id(a))
+    test(a)
 
 if __name__ == '__main__':
     main()

@@ -18,10 +18,10 @@ QUANTITY_OF_BUTTONS_IN_ROW = 5
 '''
 План
 
-Необходимо протестировать все реализованные команды.
-Необходимо научиться загружать в json, используя .json
+Необходимо протестировать все реализованные команды. +
+Необходимо научиться загружать в json, используя .json +
 Переработать логику работы с root (добавить в поле класса Group, запретить удаление чужой группы) +
-Доработать остальные команды
+Доработать остальные команды +
 Разработать логики нажатия клавиш
 
 '''
@@ -38,6 +38,8 @@ async def set_commands_in_menu(my_commands) -> None:
 @dp.message_handler(commands=['give_root'])
 async def give_root_with_command(message: types.Message) -> None:
     groups[Group.cur_group].people_with_roots = get_list_without_command(message=message)
+    text = f'Вы выдали root права {groups[Group.cur_group].people_with_roots} в {Group.cur_group} группе'
+    await dp.bot.send_message(chat_id=message.from_user.id, text=text)
 
 def add_button_back_to_menu(buttons) -> list:
     buttons.append(types.InlineKeyboardButton(text='Вернуться в главное меню', callback_data=cb.new(msg_text='Вернуться в главное меню')))
@@ -58,17 +60,17 @@ async def pressed_button(call: types.CallbackQuery, callback_data: dict) -> None
         buttons = []    
         markup_with_queue = types.InlineKeyboardMarkup(row_width=QUANTITY_OF_BUTTONS_IN_ROW)
 
-        for i in range(groups[Group.cur_group].number_of_people_in_group):
+        for i in range(groups[Group.cur_group].quantity_of_people_in_group):
                 buttons.append(types.InlineKeyboardButton(text=f'{i + 1}✅', callback_data=cb.new(msg_text=i + 1)))
         markup_with_queue.add(*buttons)
 
         await bot.send_message(chat_id=call.from_user.id, text=text_with_subject, reply_markup=markup_with_queue)
 
-    elif callback_data['msg_text'].isdigit() and 1 <= int(callback_data['msg_text']) <= groups[Group.cur_group].number_of_people_in_group: 
+    elif callback_data['msg_text'].isdigit() and 1 <= int(callback_data['msg_text']) <= groups[Group.cur_group].quantity_of_people_in_group: 
         number_of_button = int(callback_data['msg_text']) - 1
         print(number_of_button)
-        print(groups[Group.cur_group].number_of_people_in_group)
-        groups[Group.cur_group].add_person_in_queue(name_of_person=call.from_user.first_name,
+        print(groups[Group.cur_group].quantity_of_people_in_group)
+        groups[Group.cur_group].add_person_to_queue(name_of_person=call.from_user.first_name,
                                                     id=call.id,
                                                     name_of_subjects='Алгоритмы',
                                                     index=number_of_button)
@@ -96,7 +98,7 @@ async def start_handler(message: types.Message) -> None:
     markup_for_greetings_text.add(button_for_help, button_for_choose_subject)
     await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=markup_for_greetings_text)
 
-async def set_root_commands() -> dict:
+def set_root_commands() -> dict:
     my_commands = {
         "choose_group_for_settings": "Выбрать группу для настройки",
         "set_quantity_of_people": "Указать число людей в группе",
@@ -107,8 +109,8 @@ async def set_root_commands() -> dict:
     }
     return my_commands
 
-async def set_god_root_commands() -> dict:
-    my_commands = await set_root_commands()
+def set_god_root_commands() -> dict:
+    my_commands = set_root_commands()
     my_commands["add_group"] = "Добавить группу"
     my_commands["give_root"] = "Выдать пользователю root права"
     my_commands["del_group"] = "Удалить группу"
@@ -117,13 +119,14 @@ async def set_god_root_commands() -> dict:
 @dp.message_handler(commands=['help'])
 async def help_handler(message: types.Message) -> None:
     my_commands = None
-    if Group.cur_group != None and message.from_user.id in groups[Group.cur_group].people_with_roots:
-        my_commands = await set_root_commands()
+    print(message.from_user.id)
+    if Group.cur_group is not None and message.from_user.id in groups[Group.cur_group].people_with_roots:
+        my_commands = set_root_commands()
     elif message.from_user.id in root_id:
-        my_commands = await set_god_root_commands()
+        my_commands = set_god_root_commands()
 
-    if not(my_commands is None):
-        await set_commands_in_menu(my_commands=my_commands)
+    if my_commands is not None:
+        set_commands_in_menu(my_commands=my_commands)
 
     url_of_git_rep = 'https://github.com/mityaiii/QueuePythonBot.git'
     text = (
@@ -155,13 +158,14 @@ def add_groups(name_of_groups) -> None:
     for name in name_of_groups:
         group = Group.Group()
         groups[name] = group
+        print(groups[name].quantity_of_people_in_group)
 
 @dp.message_handler(commands=['add_group'])
 async def add_group_with_command(message: types.Message) -> None:
     name_of_groups = get_list_without_command(message=message)
     text = None
 
-    if name_of_groups == None:
+    if name_of_groups is None:
         text = 'Введите название групп через пробел'
         return
 
@@ -182,13 +186,11 @@ async def set_of_quantity_of_people(message: types.Message):
     quantity_of_people = text_from_message[1]
     text = None
     if quantity_of_people.isdigit():
-        groups[Group.cur_group] = int(quantity_of_people)
+        groups[Group.cur_group].quantity_of_people_in_group = int(quantity_of_people)
         text = f'Теперь в группе находиться {quantity_of_people} человек'
     else:
         text = 'Введите целое число'
     await bot.send_message(chat_id=message.from_user.id, text=text)
-
-    print(type(groups[Group.cur_group]))
 
 def add_list_of_subjects(name_of_subjects):
     groups[Group.cur_group].add_subject(name_of_subjects)
@@ -211,7 +213,7 @@ async def add_list_of_subject_with_command(message: types.Message) -> None:
 async def del_group_with_command(message: types.Message):
     names_of_group = get_list_without_command(message=message)
     for name_of_group in names_of_group:
-        groups.pop(name_of_group)
+        groups.pop(name_of_group, f'Не удалось удалить {name_of_group}')
 
 @dp.message_handler(commands=['del_list_of_subject'])
 async def del_list_of_subject_with_command(message: types.Message):
@@ -237,15 +239,9 @@ async def handler_for_text(message: types.Message) -> None:
         await bot.send_message(chat_id=message.from_user.id, text='Я не знаю такой команды.')
 
 def main() -> None:
-    global groups
-    # groups = for_test.how_use_programm()
     executor.start_polling(dp)
-    # print(groups[Group.cur_group].__dict__)
-    print(type(groups[Group.cur_group]))
-    print(groups[Group.cur_group].get_subjects())
-    print(groups[Group.cur_group].people_with_roots)
-    print(groups[Group.cur_group].get_info_about_person_by_index('Алгоритмы', 1).name_of_person)
+    # print(type(groups[Group.cur_group]))
+    # print(groups[Group.cur_group].quantity_of_people_in_group)
     
-
 if __name__ == '__main__':
     main()
